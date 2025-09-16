@@ -1,33 +1,41 @@
 #!/usr/bin/env python3
-
-from flask import request, session
-from flask_restful import Resource
-from sqlalchemy.exc import IntegrityError
-
-from config import app, db, api
-from models import User, Recipe
-
-class Signup(Resource):
-    pass
-
-class CheckSession(Resource):
-    pass
-
-class Login(Resource):
-    pass
-
-class Logout(Resource):
-    pass
-
-class RecipeIndex(Resource):
-    pass
-
-api.add_resource(Signup, '/signup', endpoint='signup')
-api.add_resource(CheckSession, '/check_session', endpoint='check_session')
-api.add_resource(Login, '/login', endpoint='login')
-api.add_resource(Logout, '/logout', endpoint='logout')
-api.add_resource(RecipeIndex, '/recipes', endpoint='recipes')
+import os
+from flask import Flask
+from flask_migrate import Migrate
+from flask_restful import Api
+from config import db, bcrypt
+from resources import Signup, CheckSession, Login, Logout, RecipeIndex
 
 
-if __name__ == '__main__':
-    app.run(port=5555, debug=True)
+def create_app(test_config=None):
+    app = Flask(__name__, static_folder=None)
+
+    # Config
+    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key')
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///app.db')
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.json.compact = False
+
+    # Initialize extensions
+    db.init_app(app)
+    bcrypt.init_app(app)
+    migrate = Migrate(app, db)
+
+    # API + Resources
+    api = Api(app)
+    api.add_resource(Signup, "/signup")
+    api.add_resource(CheckSession, "/check_session")
+    api.add_resource(Login, "/login")
+    api.add_resource(Logout, "/logout")
+    api.add_resource(RecipeIndex, "/recipes")
+
+    @app.route('/')
+    def index():
+        return {"message": "API is running"}, 200
+
+    return app
+
+
+if __name__ == "__main__":
+    app = create_app()
+    app.run(debug=True, port=5555)

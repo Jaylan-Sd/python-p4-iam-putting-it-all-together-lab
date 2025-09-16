@@ -1,63 +1,39 @@
-#!/usr/bin/env python3
+# seed.py
+from app import create_app
+from models import db, User, Recipe
 
-from random import randint, choice as rc
+app = create_app()
+app.app_context().push()
 
-from faker import Faker
+db.create_all()
 
-from app import app
-from models import db, Recipe, User
+# clear existing
+Recipe.query.delete()
+User.query.delete()
+db.session.commit()
 
-fake = Faker()
+u1 = User(username="ava", image_url="https://example.com/ava.jpg", bio="I love cooking!")
+u1.password = "password1"
+u2 = User(username="omar", image_url="https://example.com/omar.jpg", bio="Baker and dev.")
+u2.password = "password2"
 
-with app.app_context():
+db.session.add_all([u1, u2])
+db.session.commit()
 
-    print("Deleting all records...")
-    Recipe.query.delete()
-    User.query.delete()
+r1 = Recipe(
+    title="Best pancakes",
+    instructions=("Mix flour, milk, eggs, whisk well. Cook on medium heat turning once. " * 3)[:300],
+    minutes_to_complete=20,
+    user=u1
+)
+r2 = Recipe(
+    title="Slow roasted chicken",
+    instructions=("Season chicken, roast for 90 mins, baste occasionally. " * 3)[:250],
+    minutes_to_complete=100,
+    user=u2
+)
 
-    fake = Faker()
+db.session.add_all([r1, r2])
+db.session.commit()
 
-    print("Creating users...")
-
-    # make sure users have unique usernames
-    users = []
-    usernames = []
-
-    for i in range(20):
-        
-        username = fake.first_name()
-        while username in usernames:
-            username = fake.first_name()
-        usernames.append(username)
-
-        user = User(
-            username=username,
-            bio=fake.paragraph(nb_sentences=3),
-            image_url=fake.url(),
-        )
-
-        user.password_hash = user.username + 'password'
-
-        users.append(user)
-
-    db.session.add_all(users)
-
-    print("Creating recipes...")
-    recipes = []
-    for i in range(100):
-        instructions = fake.paragraph(nb_sentences=8)
-        
-        recipe = Recipe(
-            title=fake.sentence(),
-            instructions=instructions,
-            minutes_to_complete=randint(15,90),
-        )
-
-        recipe.user = rc(users)
-
-        recipes.append(recipe)
-
-    db.session.add_all(recipes)
-    
-    db.session.commit()
-    print("Complete.")
+print("Seeded DB with users and recipes.")
