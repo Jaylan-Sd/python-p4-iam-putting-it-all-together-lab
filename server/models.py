@@ -1,4 +1,3 @@
-from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import validates
 from config import db, bcrypt
 
@@ -13,13 +12,14 @@ class User(db.Model):
 
     recipes = db.relationship("Recipe", backref="user", cascade="all, delete-orphan")
 
-    # password hashing
     @property
     def password_hash(self):
         raise AttributeError("Password hashes may not be viewed.")
 
     @password_hash.setter
     def password_hash(self, password):
+        if not password or len(password) < 4:  # ✅ basic validation
+            raise ValueError("Password must be at least 4 characters long.")
         self._password_hash = bcrypt.generate_password_hash(password).decode("utf-8")
 
     def authenticate(self, password):
@@ -46,7 +46,7 @@ class Recipe(db.Model):
 
     @validates("instructions")
     def validate_instructions(self, key, instructions):
-        if len(instructions) < 50:
+        if not instructions or len(instructions) < 50:
             raise ValueError("Instructions must be at least 50 characters long.")
         return instructions
 

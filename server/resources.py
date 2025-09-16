@@ -5,13 +5,19 @@ from models import db, User, Recipe
 class Signup(Resource):
     def post(self):
         data = request.get_json()
+        username = data.get("username")
+        password = data.get("password")
+
+        if not username or not password:  # ✅ strict validation
+            return {"error": "Invalid username or password"}, 422
+
         try:
             user = User(
-                username=data["username"],
-                image_url=data.get("image_url"),
-                bio=data.get("bio")
+                username=username,
+                image_url=data.get("image_url", ""),
+                bio=data.get("bio", "")
             )
-            user.password_hash = data["password"]
+            user.password_hash = password
             db.session.add(user)
             db.session.commit()
             session["user_id"] = user.id
@@ -41,12 +47,16 @@ class Login(Resource):
 
 class Logout(Resource):
     def delete(self):
+        if "user_id" not in session:   # ✅ unauthorized check
+            return {"error": "Unauthorized"}, 401
         session.pop("user_id", None)
         return {}, 204
 
 
 class RecipeIndex(Resource):
     def get(self):
+        if "user_id" not in session:   # ✅ unauthorized check
+            return {"error": "Unauthorized"}, 401
         recipes = Recipe.query.all()
         return [recipe.to_dict() for recipe in recipes], 200
 
@@ -56,6 +66,9 @@ class RecipeIndex(Resource):
             return {"error": "Unauthorized"}, 401
 
         data = request.get_json()
+        if not data.get("title") or not data.get("instructions") or not data.get("minutes_to_complete"):
+            return {"error": "Invalid recipe"}, 422
+
         try:
             recipe = Recipe(
                 title=data["title"],
