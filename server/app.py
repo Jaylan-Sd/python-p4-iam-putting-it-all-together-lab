@@ -12,7 +12,9 @@ def create_app(test_config=None):
 
     # Config
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key')
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///app.db')
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
+        'DATABASE_URL', 'sqlite:///app.db'
+    )
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.json.compact = False
 
@@ -21,7 +23,7 @@ def create_app(test_config=None):
     bcrypt.init_app(app)
     migrate = Migrate(app, db)
 
-    # API + Resources
+    # Register resources
     api = Api(app)
     api.add_resource(Signup, "/signup")
     api.add_resource(CheckSession, "/check_session")
@@ -36,6 +38,9 @@ def create_app(test_config=None):
     return app
 
 
+# 👇 Add this so tests can import `app`
+app = create_app()
+
+
 if __name__ == "__main__":
-    app = create_app()
     app.run(debug=True, port=5555)
