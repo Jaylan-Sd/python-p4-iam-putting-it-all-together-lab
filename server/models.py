@@ -31,8 +31,15 @@ class User(db.Model):
     @validates("username")
     def validate_username(self, key, username):
         if not username or username.strip() == "":
-            raise ValueError("Username must not be empty")
+            raise ValueError("Username required")
         return username
+
+    @validates("title")
+    def validate_title(self, key, title):
+        if not title or title.strip() == "":
+            raise ValueError("Title required")
+        return title
+    
 
 
 class Recipe(db.Model):
@@ -48,5 +55,5 @@ class Recipe(db.Model):
     @validates("instructions")
     def validate_instructions(self, key, instructions):
         if len(instructions) < 50:
-            raise ValueError("Instructions must be at least 50 characters")
+            raise ValueError("Instructions must be 50+ characters")
         return instructions

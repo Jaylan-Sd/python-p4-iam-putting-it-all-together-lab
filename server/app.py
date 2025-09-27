@@ -72,7 +72,7 @@ def login():
             "image_url": user.image_url,
         }), 200
 
-    return {"error": "Invalid credentials"}, 401
+    return {"error": "Invalid username or password"}, 401
 
 
 # ----------------- Logout -----------------
@@ -128,7 +128,7 @@ def create_recipe():
             "minutes_to_complete": recipe.minutes_to_complete,
         }), 201
     except Exception:
-        return {"error": "Invalid recipe"}, 422
+        return {"error": "Unprocessable Entity"}, 422
 
 
 if __name__ == "__main__":
