@@ -17,19 +17,21 @@ class User(db.Model):
 
     @property
     def password_hash(self):
-        raise AttributeError("Password hashes may not be viewed.")   # test expects this
+        raise AttributeError("Password hashes may not be viewed.")
 
     @password_hash.setter
     def password_hash(self, password):
         self._password_hash = generate_password_hash(password)
 
     def authenticate(self, password):
-        return check_password_hash(self._password_hash, password)
+        if check_password_hash(self._password_hash, password):
+            return self
+        return False
 
     @validates("username")
     def validate_username(self, key, username):
         if not username or username.strip() == "":
-            raise ValueError("Username required")
+            raise ValueError("Username must not be empty")
         return username
 
 
@@ -46,6 +48,5 @@ class Recipe(db.Model):
     @validates("instructions")
     def validate_instructions(self, key, instructions):
         if len(instructions) < 50:
-            raise ValueError("Instructions must be 50+ characters")
+            raise ValueError("Instructions must be at least 50 characters")
         return instructions
-

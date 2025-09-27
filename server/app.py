@@ -45,7 +45,7 @@ def check_session():
     if not user_id:
         return {"error": "Unauthorized"}, 401
 
-    user = User.query.get(user_id)
+    user = db.session.get(User, user_id)   # ✅ new way, not User.query.get
     if not user:
         return {"error": "Unauthorized"}, 401
 
@@ -81,7 +81,7 @@ def logout():
     if not session.get("user_id"):
         return {"error": "Unauthorized"}, 401
 
-    session["user_id"] = None
+    session.pop("user_id", None)   # ✅ better than setting None
     return {}, 204
 
 
@@ -92,7 +92,7 @@ def get_recipes():
     if not user_id:
         return {"error": "Unauthorized"}, 401
 
-    user = User.query.get(user_id)
+    user = db.session.get(User, user_id)   # ✅ new way
     return jsonify([
         {
             "id": recipe.id,
